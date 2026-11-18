@@ -1,0 +1,26 @@
+name: DESK Solana Market Scan
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 */6 * * *'
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python -m unittest discover -v
+      - name: Fetch read-only public Solana market data
+        run: python market_scan.py
+      - name: Upload market scan report
+        uses: actions/upload-artifact@v4
+        with:
+          name: desk-solana-scan
+          path: reports/solana-scan.json
+          retention-days: 7
