@@ -1,0 +1,18 @@
+name: DESK BUY SELL Dry Run
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/buy-sell-dryrun.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Simulate BUY and SELL without wallet or real funds
+        run: python test_buy_sell_dryrun.py
