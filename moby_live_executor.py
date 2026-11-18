@@ -48,6 +48,29 @@ def validate(action, mint, usd, pct, slippage, approval, verified):
         raise ValueError("Independent verified SCAN/VERIFY attestation missing; order BLOCKED")
     return qty
 
+def buy_arguments(mint, qty, verified):
+    """Build a Moby BUY request only after independent risk approval."""
+    if verified is not True:
+        raise ValueError("BUY blocked: independent token risk verification missing")
+    if not MINT.fullmatch(mint):
+        raise ValueError("Invalid Solana mint")
+    value = amount(qty, "BUY amount")
+    if value > MAX_BUY_USD:
+        raise ValueError("BUY cap is $10")
+    return {"output_token": mint, "amount_usd": float(value)}
+
+def execute_verified_buy(mint, qty, verified, session, call_rpc=call):
+    """Send one real Moby BUY only after upstream approval and verification.
+
+    Not exposed by workflow_dispatch until trusted evidence validation exists.
+    """
+    arguments = buy_arguments(mint, qty, verified)
+    response, session = call_rpc("tools/call", {
+        "name": "quick_buy", "arguments": arguments}, 6, session)
+    if response.get("error") or response.get("result", {}).get("isError"):
+        raise RuntimeError("Moby BUY error; check order history before retrying")
+    return session
+
 def main():
     if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
         raise SystemExit("Live orders require a manual workflow dispatch")
