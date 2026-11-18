@@ -1,5 +1,7 @@
 name: DESK Paper Demo
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: '17 3 * * *'
