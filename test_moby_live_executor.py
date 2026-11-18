@@ -7,9 +7,8 @@ class LiveGateTests(unittest.TestCase):
     def test_buy_requires_attestation(self):
         with self.assertRaisesRegex(ValueError, "attestation"):
             validate("BUY", MINT, "5", "100", 50, "APPROVE BUY "+MINT+" 5", False)
-    def test_sell_requires_attestation(self):
-        with self.assertRaisesRegex(ValueError, "attestation"):
-            validate("SELL", MINT, "5", "50", 50, "APPROVE SELL "+MINT+" 50", False)
+    def test_sell_exact_approval_for_exit(self):
+        self.assertEqual(str(validate("SELL", MINT, "5", "50", 50, "APPROVE SELL "+MINT+" 50", False)), "50")
     def test_wrong_approval(self):
         with self.assertRaisesRegex(ValueError, "approval"):
             validate("BUY", MINT, "5", "100", 50, "YES", False)
