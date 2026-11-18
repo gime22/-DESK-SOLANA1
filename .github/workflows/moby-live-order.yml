@@ -39,6 +39,7 @@ jobs:
     environment: desk-live
     env:
       GITHUB_EVENT_NAME: ${{ github.event_name }}
+      MOBY_MCP_URL: ${{ secrets.MOBY_MCP_URL }}
       DESK_ACTION: ${{ inputs.action }}
       DESK_MINT: ${{ inputs.token_mint }}
       DESK_BUY_USD: ${{ inputs.buy_usd }}
