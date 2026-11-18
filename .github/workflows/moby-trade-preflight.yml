@@ -1,0 +1,21 @@
+name: DESK Moby Trading Preflight
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/moby-trade-preflight.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      MOBY_MCP_URL: ${{ secrets.MOBY_MCP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check Moby order schemas and read-only account functions
+        run: python moby_trade_preflight.py
