@@ -1,0 +1,34 @@
+name: DESK Buy Sell preflight tests
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'moby_preflight.py'
+      - '.github/workflows/moby-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile
+        run: python -m py_compile desk.py scanner.py moby_preflight.py
+      - name: Test paper status
+        run: python desk.py status
+      - name: Dry run BUY
+        run: python moby_preflight.py --side buy --token So11111111111111111111111111111111111111112 --amount 0.01 --unit SOL
+      - name: Dry run SELL
+        run: python moby_preflight.py --side sell --token So11111111111111111111111111111111111111112 --amount 0.01 --unit TOKEN
+      - name: Confirm live order is blocked
+        shell: bash
+        run: |
+          if python moby_preflight.py --side buy --token So11111111111111111111111111111111111111112 --amount 0.01 --unit SOL --live; then
+            echo "FAIL: live trading unexpectedly enabled"
+            exit 1
+          fi
+          echo "PASS: live trading blocked"
