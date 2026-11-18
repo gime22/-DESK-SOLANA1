@@ -1,0 +1,54 @@
+name: DESK Manual Live Order Gate (BLOCKED until verified)
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: BUY or SELL
+        type: choice
+        options: [BUY, SELL]
+        required: true
+      token_mint:
+        description: Exact Solana mint address
+        required: true
+        type: string
+      buy_usd:
+        description: BUY amount in USDC (maximum 10)
+        default: '5'
+        type: string
+      sell_pct:
+        description: SELL percentage (maximum 100)
+        default: '100'
+        type: string
+      slippage_bps:
+        description: Maximum slippage in basis points (maximum 100)
+        default: '50'
+        type: string
+      approval:
+        description: 'Exact phrase APPROVE BUY <mint> <amount> or APPROVE SELL <mint> <pct>'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: desk-manual-live-order
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: desk-live
+    env:
+      GITHUB_EVENT_NAME: ${{ github.event_name }}
+      DESK_ACTION: ${{ inputs.action }}
+      DESK_MINT: ${{ inputs.token_mint }}
+      DESK_BUY_USD: ${{ inputs.buy_usd }}
+      DESK_SELL_PCT: ${{ inputs.sell_pct }}
+      DESK_SLIPPAGE_BPS: ${{ inputs.slippage_bps }}
+      DESK_APPROVAL: ${{ inputs.approval }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate manual approval and risk controls (fails closed)
+        run: python moby_live_executor.py
