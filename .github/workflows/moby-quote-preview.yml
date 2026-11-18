@@ -1,0 +1,30 @@
+name: DESK Moby Real Quote Preview (No Trade)
+on:
+  workflow_dispatch:
+    inputs:
+      token_mint:
+        description: Exact Solana token mint
+        required: true
+        type: string
+      amount:
+        description: Quote amount (Moby input units, maximum 10)
+        required: true
+        default: '1'
+        type: string
+permissions:
+  contents: read
+jobs:
+  quote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      MOBY_MCP_URL: ${{ secrets.MOBY_MCP_URL }}
+      DESK_TOKEN_MINT: ${{ inputs.token_mint }}
+      DESK_QUOTE_AMOUNT: ${{ inputs.amount }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch live Moby quote without trading
+        run: python moby_quote_preview.py
