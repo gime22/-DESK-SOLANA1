@@ -1,0 +1,26 @@
+name: DESK Find New Solana Coins
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/find-new-coins.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      MOBY_MCP_URL: ${{ secrets.MOBY_MCP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scan new Solana tokens and research using Moby
+        run: python find_moby_candidates.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desk-new-coins
+          path: reports/moby-candidates.json
+          retention-days: 7
