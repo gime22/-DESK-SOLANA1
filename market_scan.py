@@ -51,7 +51,10 @@ def scan(fetch=get_json):
                 entry["reason"] = "SKIP final: holder distribution, contract safety and smart-money data unavailable from this source"
         except Exception as exc:
             entry["reason"] = "DexScreener pair endpoint unavailable: " + type(exc).__name__
-        gate = evaluate(entry)\n        entry["risk_checks"] = gate["reasons"]\n        entry["decision"] = gate["decision"]\n        report["candidates"].append(entry)
+        gate = evaluate(entry)
+        entry["risk_checks"] = gate["reasons"]
+        entry["decision"] = gate["decision"]
+        report["candidates"].append(entry)
     if not report["candidates"]:
         report["warnings"].append("No Solana profiles in latest feed; no tokens approved")
     return report
