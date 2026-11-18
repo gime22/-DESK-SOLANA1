@@ -17,5 +17,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify Moby read-only functions
+      - name: Verify Moby read-only functions (no trades)
         run: python moby_readonly.py
