@@ -9,6 +9,8 @@ from moby_token_research import check_token
 
 OUT = pathlib.Path("reports/moby-candidates.json")
 MAX_RESEARCH = 5
+MIN_LIQUIDITY_USD = 20_000
+MIN_VOLUME_24H_USD = 50_000
 
 def main():
     report = scan()
@@ -16,7 +18,11 @@ def main():
     fresh = []
     for x in report["candidates"]:
         created = x.get("created_at_ms")
-        if isinstance(created, (int, float)) and 0 <= now-created <= 24*3600000:
+        if (isinstance(created, (int, float)) and 0 <= now-created <= 24*3600000
+                and isinstance(x.get("liquidity_usd"), (int, float))
+                and x["liquidity_usd"] >= MIN_LIQUIDITY_USD
+                and isinstance(x.get("volume_24h_usd"), (int, float))
+                and x["volume_24h_usd"] >= MIN_VOLUME_24H_USD):
             fresh.append(x)
     fresh.sort(key=lambda x: (x.get("liquidity_usd") or 0), reverse=True)
     results = []
