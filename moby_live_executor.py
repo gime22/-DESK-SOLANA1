@@ -2,8 +2,7 @@
 """DESK guarded Moby BUY/SELL executor.
 
 Only callable by manual GitHub workflow_dispatch. No scheduled/push order path.
-Live orders remain fail-closed until a separate, independently verified risk
-attestation is supplied. This prevents an input checkbox from bypassing SCAN/VERIFY.
+BUY remains blocked pending verified risk evidence. SELL requires manual approval.
 """
 import json
 import os
@@ -45,7 +44,7 @@ def validate(action, mint, usd, pct, slippage, approval, verified):
         expected = "APPROVE SELL " + mint + " " + str(qty)
     if approval != expected:
         raise ValueError("Exact manual approval phrase does not match")
-    if verified is not True:
+    if action == "BUY" and verified is not True:
         raise ValueError("Independent verified SCAN/VERIFY attestation missing; order BLOCKED")
     return qty
 
@@ -64,9 +63,29 @@ def main():
     except (ValueError, TypeError) as exc:
         print("ORDER BLOCKED:", exc)
         return 2
-    # Unreachable until independent evidence validation is implemented.
-    # No network or wallet calls are made from this file while blocked.
-    raise RuntimeError("Executor disabled pending independent attestation")
+    if action != "SELL":
+        raise SystemExit("BUY blocked until independent risk verification")
+    if not os.environ.get("MOBY_MCP_URL", "").startswith("https://"):
+        raise SystemExit("Moby credential unavailable")
+    init, session = call("initialize", {"protocolVersion": VERSION, "capabilities": {},
+        "clientInfo": {"name": "DESK-manual-sell", "version": "1.0"}}, 1)
+    if init.get("error"):
+        raise SystemExit("Moby initialization failed")
+    discovered, session = call("tools/list", {}, 2, session)
+    names = {x.get("name") for x in discovered.get("result", {}).get("tools", [])}
+    if not {"get_my_guardrails", "get_my_balances", "quick_sell"} <= names:
+        raise SystemExit("Required Moby tools unavailable")
+    for ident, name in enumerate(("get_my_guardrails", "get_my_balances"), 3):
+        response, session = call("tools/call", {"name": name, "arguments": {}}, ident, session)
+        if response.get("error") or response.get("result", {}).get("isError"):
+            raise SystemExit(name + " failed; SELL blocked")
+    result, session = call("tools/call", {"name": "quick_sell",
+        "arguments": {"token_address": mint, "pct": float(qty),
+                      "max_slippage_bps": slippage}}, 5, session)
+    if result.get("error") or result.get("result", {}).get("isError"):
+        raise SystemExit("Moby SELL returned error; check Moby app before retrying")
+    print("Moby SELL response received. Verify execution in Moby order history.")
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
