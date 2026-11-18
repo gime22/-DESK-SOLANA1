@@ -1,0 +1,1 @@
+DESK Solana paper-first setup. No real trades. GitHub connector write verification.
