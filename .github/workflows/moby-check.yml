@@ -1,0 +1,26 @@
+name: DESK Moby Connection Check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      MOBY_MCP_URL: ${{ secrets.MOBY_MCP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require private MCP endpoint
+        shell: bash
+        run: |
+          if [ -z "$MOBY_MCP_URL" ]; then
+            echo "::error::Missing MOBY_MCP_URL repository secret"
+            exit 1
+          fi
+          echo "::add-mask::$MOBY_MCP_URL"
+      - name: Test MCP handshake and list available tools (no trading)
+        run: python moby_probe.py --check
